@@ -1,4 +1,4 @@
 sfi-intro
 =========
 
-Odds and ends
+Scrapbook for the Introduction to Complexity MOOC from the Santa Fe Institute.
