@@ -1,4 +1,4 @@
-r-lab
-=====
+sfi-intro
+=========
 
-Logistic Map etc.
+Odds and ends
