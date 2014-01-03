@@ -12,27 +12,27 @@
 (def TOTAL 100)
 (def THRESHOLD 60)
 
-(def guess (rand-int (inc TOTAL)))
+(defn guess [] (rand-int (inc TOTAL)))
 
 (defn predict-random
   "Just a wild guess!"
   [hist]
-  guess)
+  (guess))
 
 (defn predict-last-wk
   "Prediction: this week will be the same as last week"
   [hist]
-  (if (empty? hist) guess (last hist)))
+  (if (empty? hist) (guess) (last hist)))
 
 (defn predict-alternate-last-wk
   "Prediction: those who went last week will stay at home, and vice versa"
   [hist]
-  (if (empty? hist) guess (- TOTAL (last hist))))
+  (if (empty? hist) (guess) (- TOTAL (last hist))))
 
 (defn gen-predict-avg-recent-hist
   "Generate a prediction function which uses average of last n weeks"
   [n]
-  (fn [hist] (cond (empty? hist) guess
+  (fn [hist] (cond (empty? hist) (guess)
                   (< (count hist) n) (quot (apply + hist) (count hist))
                   :default (quot (apply + (take-last n hist)) n))))
 
