@@ -36,40 +36,56 @@
                   (< (count hist) n) (quot (apply + hist) (count hist))
                   :default (quot (apply + (take-last n hist)) n))))
 
-(defn gen-attendance-rule
-  "Generate an attendance decision function based on the given predictor function"
-  [predictor]
-  (fn [hist] (< (predictor hist) THRESHOLD)))
-
 ;;; A sample population specfication for 100
 
-(def sample-agent-spec {predict-random 20,
-                        predict-last-wk 20,
-                        predict-alternate-last-wk 20,
-                        (gen-predict-avg-recent-hist 2) 20,
-                        (gen-predict-avg-recent-hist 3) 20})
+(def sample-population-spec {predict-random 20,
+                             predict-last-wk 20,
+                             predict-alternate-last-wk 20,
+                             (gen-predict-avg-recent-hist 2) 20,
+                             (gen-predict-avg-recent-hist 3) 20})
+
+(defn populate
+  "Build a population based on a map of predictors to quantity"
+  [spec]
+  (loop [predictors (keys spec), population []]
+    (if (empty? predictors)
+      population
+      (recur (rest predictors)
+             (concat population
+                     (repeat (get spec (first predictors))
+                             (first predictors)))))))
+
+(def sample-population (populate sample-population-spec))
 
 (def sample-history [34 55 56 40 61 70 50])
 
-(defn agent-population
-  "Build an agent population based on a map of predictors to quantity"
-  [spec]
-  (loop [predictors (keys spec) population []]
-    (if (empty? predictors)
-      population
-      (recur (rest predictors) (concat population (repeat (get spec (first predictors)) (gen-attendance-rule (first predictors))))))))
+(defn predictions
+  "Takes a sequence of predictors and turnout history. Returns predictions for next event."
+  [predictors hist]
+  (loop [forecasts [],
+         coll predictors]
+    (if (empty? coll)
+      forecasts
+      (recur (conj forecasts {:strategy (first coll)
+                              :prediction ((first coll) hist)})
+             (rest coll)))))
 
-(def sample-population (agent-population sample-agent-spec))
+(defn turnout
+  "Calculate turnout at next event based on collective predictions"
+  [predictors hist]
+  (count
+   (filter #(< (:prediction %) THRESHOLD)
+           (predictions predictors hist))))
 
-(defn gen-el-farol-fn
-  "Generate a function that takes attendance history and returns attendance, based on a given group."
-  [agents]
-  (fn [history] (conj history (count (for [agent agents :when (agent history)] agent)))))
+(defn update-turnout-record
+  "Returns updated turnout history"
+  [predictors hist]
+  (conj hist (turnout predictors hist)))
 
-(defn gen-el-farol-seq
-  "doc-string"
-  [agents history]
-  (let [attendance (gen-el-farol-fn agents)]
-    (iterate attendance history)))
+;; Use (nth s 30) to see the outcome after 30 iterations
 
-(def sample-el-farol-seq (gen-el-farol-seq sample-population sample-history))
+(defn el-farol-seq
+  "A lazy sequence of turnout figures for given agent population and seed"
+  [predictors hist]
+  (let [next-turnout (partial update-turnout-record predictors)]
+    (iterate next-turnout hist)))
