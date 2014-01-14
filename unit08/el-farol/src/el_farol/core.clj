@@ -47,13 +47,7 @@
 (defn populate
   "Build a population based on a map of predictors to quantity"
   [spec]
-  (loop [predictors (keys spec), population []]
-    (if (empty? predictors)
-      population
-      (recur (rest predictors)
-             (concat population
-                     (repeat (get spec (first predictors))
-                             (first predictors)))))))
+  (reduce concat (map #(repeat (val %) (key %)) spec)))
 
 (def sample-population (populate sample-population-spec))
 
