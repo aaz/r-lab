@@ -56,13 +56,7 @@
 (defn predictions
   "Takes a sequence of predictors and turnout history. Returns predictions for next event."
   [predictors hist]
-  (loop [forecasts [],
-         coll predictors]
-    (if (empty? coll)
-      forecasts
-      (recur (conj forecasts {:strategy (first coll)
-                              :prediction ((first coll) hist)})
-             (rest coll)))))
+  (concat (map #(hash-map :strategy %, :prediction (% hist)) predictors)))
 
 (defn turnout
   "Calculate turnout at next event based on collective predictions"
